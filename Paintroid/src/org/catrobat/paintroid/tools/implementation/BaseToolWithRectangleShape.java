@@ -19,7 +19,9 @@
 
 package org.catrobat.paintroid.tools.implementation;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -38,6 +40,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
+import android.widget.EditText;
 
 import org.catrobat.paintroid.PaintroidApplication;
 import org.catrobat.paintroid.R;
@@ -83,6 +86,8 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 	protected float mBoxWidth;
 	protected float mBoxHeight;
 	protected float mBoxRotation; // in degree
+    protected float mRealBoxRotation; // in degree // ### new for rotate with defined angle
+    protected int mSnapAngle = 0;   // ### new for rotate with defined angle
 	protected float mBoxResizeMargin;
 	protected float mRotationSymbolDistance;
 	protected float mRotationSymbolWidth;
@@ -290,6 +295,12 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 			drawBitmap(canvas);
 		}
 
+        //v ### new for rotate with defined angle
+        if (true) {
+            createDefinedAngle(canvas);
+        }
+        //^ ### new for rotate with defined angle
+
 		drawRectangle(canvas);
 		drawToolSpecifics(canvas);
 
@@ -333,11 +344,20 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 				circlePaint);
 		canvas.drawCircle(0, mBoxHeight / 2, circleRadius, circlePaint);
 		canvas.drawCircle(-mBoxWidth / 2, mBoxHeight / 2, circleRadius,
-				circlePaint);
+                circlePaint);
 		canvas.drawCircle(-mBoxWidth / 2, 0, circleRadius, circlePaint);
 		canvas.drawCircle(-mBoxWidth / 2, -mBoxHeight / 2, circleRadius,
 				circlePaint);
 	}
+
+    // ### new for rotate with defined angle
+    private void createDefinedAngle(Canvas canvas) {
+        Paint anglePaint = new Paint();
+        anglePaint.setColor(Color.GREEN);
+        anglePaint.setTextSize(70);
+        String angleText = "" + mBoxRotation;
+        canvas.drawText(angleText, 100,100, anglePaint);
+    }
 
 	private void drawRotationArrows(Canvas canvas) {
 		float arcStrokeWidth = getInverselyProportionalSizeForZoom(ROTATION_ARROW_ARC_STROKE_WIDTH);
@@ -406,7 +426,7 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 		mLinePaint.setStrokeWidth(mToolStrokeWidth);
 		mLinePaint.setColor(mSecondaryShapeColor);
 		canvas.drawRect(new RectF(-mBoxWidth / 2, -mBoxHeight / 2,
-				mBoxWidth / 2, mBoxHeight / 2), mLinePaint);
+                mBoxWidth / 2, mBoxHeight / 2), mLinePaint);
 	}
 
 	private void drawStatus(Canvas canvas) {
@@ -472,6 +492,36 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 		mToolPosition.y = newYPos;
 	}
 
+    // ### new for rotate with defined angle
+    private void rotationInputPopup() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
+
+        alert.setTitle("Rotation input");
+        alert.setMessage("snap angle");
+
+        final EditText input = new EditText(mContext);
+        alert.setView(input);
+
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String value = input.getText().toString();
+                try {
+                    mSnapAngle = Integer.parseInt(value);
+                }
+                catch (NumberFormatException e) {
+                    // TODO: not necessary if scroll selection is used
+                }
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Canceled.
+            }
+        });
+        alert.show();
+    }
+
 	private void rotate(float deltaX, float deltaY) {
 		if (mDrawingBitmap == null) {
 			return;
@@ -488,10 +538,44 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
         double rotationAngleCurrent = Math.atan2(currentYLength, currentXLength);
         double deltaAngle = -(rotationAnglePrevious - rotationAngleCurrent);
 
+        // v### new for rotate with defined angle
+
+        /* //previous version
         mBoxRotation += (float) Math.toDegrees(deltaAngle) + 360;
         mBoxRotation = mBoxRotation % 360;
         if (mBoxRotation > 180)
             mBoxRotation = -180 + (mBoxRotation - 180);
+         */
+
+        mRealBoxRotation += (float) Math.toDegrees(deltaAngle) + 360;
+        mRealBoxRotation = mRealBoxRotation % 360;
+        if (mRealBoxRotation > 180)
+            mRealBoxRotation = -180 + (mRealBoxRotation - 180);
+
+        float snapAngle = mSnapAngle; // set the snap angle, was hardcoded 45;
+        float snapInterval = 5;
+
+        float tempBoxRotation = mRealBoxRotation + 180; // quick fix for negative angles
+
+        float snapDelta = tempBoxRotation % snapAngle;
+        snapDelta = snapAngle - snapDelta;
+
+        if (snapDelta < snapInterval) { // realRotation < snapAngle
+            mBoxRotation = mRealBoxRotation + snapDelta;
+        }
+        else if (snapDelta > (snapAngle - snapInterval)) { // realRotation > snapAngle
+            mBoxRotation = mRealBoxRotation - (snapAngle - snapDelta);
+        }
+        else { // do not snap
+            mBoxRotation = mRealBoxRotation;
+        }
+
+        Log.d("Rotation", "mRealBoxRotation = " + mRealBoxRotation);
+        Log.d("Rotation", "mBoxRotation = " + mBoxRotation);
+
+        // ^### new for rotate with defined angle
+
+
     }
 
 	private FloatingBoxAction getAction(float clickCoordinatesX,
@@ -507,8 +591,18 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 				* (clickCoordinatesX - mToolPosition.x) + Math
 				.cos(-rotationRadiant) * (clickCoordinatesY - mToolPosition.y));
 
+        // v### new for rotate with defined angle
+        // left side of screen for activating rotation input // TODO
+        Display display = ((WindowManager) mContext
+                .getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+
+        if (clickCoordinatesX < display.getWidth() / 10) {
+            rotationInputPopup();
+        }
+        // ^### new for rotate with defined angle
+
 		// Move (within box)
-		if (clickCoordinatesRotatedX < mToolPosition.x + mBoxWidth / 2
+		else if (clickCoordinatesRotatedX < mToolPosition.x + mBoxWidth / 2
 				- mBoxResizeMargin
 				&& clickCoordinatesRotatedX > mToolPosition.x - mBoxWidth / 2
 						+ mBoxResizeMargin
