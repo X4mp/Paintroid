@@ -19,6 +19,7 @@
 
 package org.catrobat.paintroid.tools.implementation;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -39,8 +40,12 @@ import android.graphics.Region.Op;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import org.catrobat.paintroid.PaintroidApplication;
 import org.catrobat.paintroid.R;
@@ -158,6 +163,26 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 
 		initLinePaint();
 		initScaleDependedValues();
+
+
+        // try to build a button and call the method for the snapping dialog
+        Button snapButton = new Button(context);
+        snapButton.setText("snap");
+        snapButton.setHeight(100);
+        snapButton.setWidth(100);
+
+        snapButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                rotationInputPopup();
+            }
+        });
+
+
+        Activity act = (Activity) mContext;
+        RelativeLayout layout = (RelativeLayout) act.findViewById(R.id.main_layout);
+        layout.addView(snapButton);
+
+
 	}
 
 	public BaseToolWithRectangleShape(Context context, ToolType toolType,
@@ -297,7 +322,7 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 
         //v ### new for rotate with defined angle
         if (true) {
-            createDefinedAngle(canvas);
+            showCurrentAngle(canvas);
         }
         //^ ### new for rotate with defined angle
 
@@ -351,7 +376,7 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 	}
 
     // ### new for rotate with defined angle
-    private void createDefinedAngle(Canvas canvas) {
+    private void showCurrentAngle(Canvas canvas) {
         Paint anglePaint = new Paint();
         anglePaint.setColor(Color.GREEN);
         anglePaint.setTextSize(70);
@@ -590,7 +615,7 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 				+ Math.sin(-rotationRadiant)
 				* (clickCoordinatesX - mToolPosition.x) + Math
 				.cos(-rotationRadiant) * (clickCoordinatesY - mToolPosition.y));
-
+/*
         // v### new for rotate with defined angle
         // left side of screen for activating rotation input // TODO
         Display display = ((WindowManager) mContext
@@ -600,9 +625,9 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
             rotationInputPopup();
         }
         // ^### new for rotate with defined angle
-
+*/
 		// Move (within box)
-		else if (clickCoordinatesRotatedX < mToolPosition.x + mBoxWidth / 2
+		if (clickCoordinatesRotatedX < mToolPosition.x + mBoxWidth / 2
 				- mBoxResizeMargin
 				&& clickCoordinatesRotatedX > mToolPosition.x - mBoxWidth / 2
 						+ mBoxResizeMargin
