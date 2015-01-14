@@ -164,25 +164,8 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 		initLinePaint();
 		initScaleDependedValues();
 
-
-        // try to build a button and call the method for the snapping dialog
-        Button snapButton = new Button(context);
-        snapButton.setText("snap");
-        snapButton.setHeight(100);
-        snapButton.setWidth(100);
-
-        snapButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                rotationInputPopup();
-            }
-        });
-
-
-        Activity act = (Activity) mContext;
-        RelativeLayout layout = (RelativeLayout) act.findViewById(R.id.main_layout);
-        layout.addView(snapButton);
-
-
+        // ### new for rotate with defined angle
+        createRotationButtons(context);
 	}
 
 	public BaseToolWithRectangleShape(Context context, ToolType toolType,
@@ -206,6 +189,38 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 		mRotationSymbolDistance = getInverselyProportionalSizeForZoom(DEFAULT_ROTATION_SYMBOL_DISTANCE) * 2;
 		mRotationSymbolWidth = getInverselyProportionalSizeForZoom(DEFAULT_ROTATION_SYMBOL_WIDTH);
 	}
+
+    // ### new for rotate with defined angle
+    private void createRotationButtons(Context context) {
+
+        Button snapButton = new Button(context);
+        snapButton.setText("snap");
+        snapButton.setHeight(100);
+        snapButton.setWidth(100);
+        snapButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                rotationInputPopup();
+            }
+        });
+        addButtonToView(snapButton);
+
+        // TODO: rotate left button
+
+        // TODO: rotate right button
+    }
+
+    private void addButtonToView(final Button button) {
+        Activity act = (Activity) mContext;
+        act.runOnUiThread(new Runnable() { // necessary for junit tests, otherwise the wrong thread is used
+            @Override
+            public void run() {
+                Activity act = (Activity) mContext;
+                RelativeLayout layout = (RelativeLayout) act.findViewById(R.id.main_layout);
+                layout.addView(button);
+
+            }
+        });
+    }
 
 	public void setBitmap(Bitmap bitmap) {
 		if (bitmap != null) {
@@ -617,7 +632,7 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 				.cos(-rotationRadiant) * (clickCoordinatesY - mToolPosition.y));
 /*
         // v### new for rotate with defined angle
-        // left side of screen for activating rotation input // TODO
+        // left side of screen for activating rotation input //
         Display display = ((WindowManager) mContext
                 .getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
