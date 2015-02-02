@@ -41,11 +41,14 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+
+import com.actionbarsherlock.app.ActionBar;
 
 import org.catrobat.paintroid.PaintroidApplication;
 import org.catrobat.paintroid.R;
@@ -193,20 +196,63 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
     // ### new for rotate with defined angle
     private void createRotationButtons(Context context) {
 
-        Button snapButton = new Button(context);
-        snapButton.setText("snap");
-        snapButton.setHeight(100);
-        snapButton.setWidth(100);
-        snapButton.setOnClickListener(new View.OnClickListener() {
+        int buttonDistance = 10;
+        int buttonHeight = 100;
+        int buttonWidth = 150;
+
+        final Button angleButton = new Button(context);
+        angleButton.setText("angle");
+        angleButton.setHeight(buttonHeight);
+        angleButton.setWidth(buttonWidth);
+        angleButton.setX(0);
+        angleButton.setY(0);
+        angleButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                rotationInputPopup();
+                rotationInputPopup(angleButton);
             }
         });
-        addButtonToView(snapButton);
+        addButtonToView(angleButton);
 
-        // TODO: rotate left button
 
-        // TODO: rotate right button
+        Button rotateLeftButton = new Button(context);
+        rotateLeftButton.setText("left");
+        rotateLeftButton.setHeight(buttonHeight);
+        rotateLeftButton.setWidth(buttonWidth);
+        rotateLeftButton.setX(buttonWidth + buttonDistance);
+        rotateLeftButton.setY(angleButton.getY());
+        rotateLeftButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                rotateRectangleWithButton(-mSnapAngle);
+            }
+        });
+        addButtonToView(rotateLeftButton);
+
+
+
+        Button rotateRightButton = new Button(context);
+        rotateRightButton.setText("right");
+        rotateRightButton.setHeight(buttonHeight);
+        rotateRightButton.setWidth(buttonWidth);
+        rotateRightButton.setX(2*(buttonWidth + buttonDistance));
+        //rotateRightButton.setX(rotateLeftButton.getX() + rotateLeftButton.getWidth() + buttonDistance);
+        rotateRightButton.setY(rotateLeftButton.getY());
+        rotateRightButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                rotateRectangleWithButton(mSnapAngle);
+            }
+        });
+        addButtonToView(rotateRightButton);
+        
+    }
+
+    private void rotateRectangleWithButton(float degree) {
+        mBoxRotation += degree;
+        mBoxRotation += 360;
+        mBoxRotation = mBoxRotation % 360;
+        if (mBoxRotation > 180)
+            mBoxRotation = -180 + (mBoxRotation - 180);
+
+        mRealBoxRotation = mBoxRotation;
     }
 
     private void addButtonToView(final Button button) {
@@ -533,7 +579,7 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 	}
 
     // ### new for rotate with defined angle
-    private void rotationInputPopup() {
+    private void rotationInputPopup(final Button button) {
         AlertDialog.Builder alert = new AlertDialog.Builder(mContext);
 
         alert.setTitle("Rotation input");
@@ -547,6 +593,7 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
                 String value = input.getText().toString();
                 try {
                     mSnapAngle = Integer.parseInt(value);
+                    button.setText(value);
                 }
                 catch (NumberFormatException e) {
                     // TODO: not necessary if scroll selection is used
@@ -592,10 +639,11 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
         if (mRealBoxRotation > 180)
             mRealBoxRotation = -180 + (mRealBoxRotation - 180);
 
-        float snapAngle = mSnapAngle; // set the snap angle, was hardcoded 45;
+        float snapAngle = Math.abs(mSnapAngle); // set the snap angle, was hardcoded 45;
         float snapInterval = 5;
 
-        float tempBoxRotation = mRealBoxRotation + 180; // quick fix for negative angles
+        float tempBoxRotation = mRealBoxRotation + 180; // quick fix for negative angles, not necessary if input doesn't allows it
+        //float tempBoxRotation = mRealBoxRotation;
 
         float snapDelta = tempBoxRotation % snapAngle;
         snapDelta = snapAngle - snapDelta;
