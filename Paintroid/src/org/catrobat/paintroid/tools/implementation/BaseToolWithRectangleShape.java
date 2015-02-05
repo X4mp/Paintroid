@@ -96,6 +96,7 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
 	protected float mBoxRotation; // in degree
     protected float mRealBoxRotation; // in degree // ### new for rotate with defined angle
     protected int mSnapAngle = 0;   // ### new for rotate with defined angle
+    protected boolean mSnappingIsActivated = false;   // ### new for rotate with defined angle
 	protected float mBoxResizeMargin;
 	protected float mRotationSymbolDistance;
 	protected float mRotationSymbolWidth;
@@ -639,24 +640,45 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
         if (mRealBoxRotation > 180)
             mRealBoxRotation = -180 + (mRealBoxRotation - 180);
 
-        float snapAngle = Math.abs(mSnapAngle); // set the snap angle, was hardcoded 45;
+        //if (mSnappingIsActivated) {
+        if (true) {
+            float snapInterval = 5;
+            snapAngleIfIsInInterval(snapInterval);
+        }
+        else {
+            mBoxRotation = mRealBoxRotation;
+        }
+
+        /*
+        float snapAngle = Math.abs(mSnapAngle);
         float snapInterval = 5;
 
-        float tempBoxRotation = mRealBoxRotation + 180; // quick fix for negative angles, not necessary if input doesn't allows it
+        float tempBoxRotation = mRealBoxRotation;// + 180; // quick fix for negative angles, not necessary if input doesn't allows it
         //float tempBoxRotation = mRealBoxRotation;
 
         float snapDelta = tempBoxRotation % snapAngle;
-        snapDelta = snapAngle - snapDelta;
+
+        if (tempBoxRotation > 0)
+            snapDelta = snapAngle - snapDelta;
+        else
+            snapDelta = snapAngle + snapDelta;
 
         if (snapDelta < snapInterval) { // realRotation < snapAngle
-            mBoxRotation = mRealBoxRotation + snapDelta;
+            if (tempBoxRotation > 0)
+                mBoxRotation = mRealBoxRotation + snapDelta;
+            else
+                mBoxRotation = mRealBoxRotation - snapDelta;
         }
         else if (snapDelta > (snapAngle - snapInterval)) { // realRotation > snapAngle
-            mBoxRotation = mRealBoxRotation - (snapAngle - snapDelta);
+            if (tempBoxRotation > 0)
+                mBoxRotation = mRealBoxRotation - (snapAngle - snapDelta);
+            else
+                mBoxRotation = mRealBoxRotation + (snapAngle - snapDelta);
         }
         else { // do not snap
             mBoxRotation = mRealBoxRotation;
         }
+        */
 
         Log.d("Rotation", "mRealBoxRotation = " + mRealBoxRotation);
         Log.d("Rotation", "mBoxRotation = " + mBoxRotation);
@@ -664,6 +686,36 @@ public abstract class BaseToolWithRectangleShape extends BaseToolWithShape {
         // ^### new for rotate with defined angle
 
 
+    }
+
+    private void snapAngleIfIsInInterval(float snapInterval){
+        float snapAngle = Math.abs(mSnapAngle);
+
+        float tempBoxRotation = mRealBoxRotation;// + 180; // quick fix for negative angles, not necessary if input doesn't allows it
+        //float tempBoxRotation = mRealBoxRotation;
+
+        float snapDelta = tempBoxRotation % snapAngle;
+
+        if (tempBoxRotation > 0)
+            snapDelta = snapAngle - snapDelta;
+        else
+            snapDelta = snapAngle + snapDelta;
+
+        if (snapDelta < snapInterval) { // realRotation < snapAngle
+            if (tempBoxRotation > 0)
+                mBoxRotation = mRealBoxRotation + snapDelta;
+            else
+                mBoxRotation = mRealBoxRotation - snapDelta;
+        }
+        else if (snapDelta > (snapAngle - snapInterval)) { // realRotation > snapAngle
+            if (tempBoxRotation > 0)
+                mBoxRotation = mRealBoxRotation - (snapAngle - snapDelta);
+            else
+                mBoxRotation = mRealBoxRotation + (snapAngle - snapDelta);
+        }
+        else { // do not snap
+            mBoxRotation = mRealBoxRotation;
+        }
     }
 
 	private FloatingBoxAction getAction(float clickCoordinatesX,
