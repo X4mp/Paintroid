@@ -262,6 +262,7 @@ public abstract class OptionsMenuActivity extends SherlockFragmentActivity {
 				if (PaintroidApplication.menu.findItem(R.id.menu_item_save_image) != null) {
 					PaintroidApplication.menu.findItem(R.id.menu_item_save_image).setVisible(false);
 				}
+				PaintroidApplication.saveCopy = true;
 				break;
 			case REQUEST_CODE_TAKE_PICTURE:
 				loadBitmapFromUri(mCameraImageUri);
