@@ -25,6 +25,7 @@ import org.catrobat.paintroid.dialog.IndeterminateProgressDialog;
 import org.catrobat.paintroid.dialog.InfoDialog;
 import org.catrobat.paintroid.dialog.InfoDialog.DialogType;
 import org.catrobat.paintroid.tools.Tool.StateChange;
+import org.catrobat.paintroid.tools.implementation.ImportTool;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -327,8 +328,10 @@ public abstract class OptionsMenuActivity extends SherlockFragmentActivity {
 							getSupportFragmentManager(),
 							"loadbitmapdialogerror");
 				} else {
-                    PaintroidApplication.savedPictureUri = uri;
-                }
+					if (!(PaintroidApplication.currentTool instanceof ImportTool)) {
+						PaintroidApplication.savedPictureUri = uri;
+					}
+				}
 			}
 		};
 		thread.start();
