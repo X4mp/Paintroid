@@ -209,8 +209,8 @@ public class MainActivity extends NavigationDrawerMenuActivity implements  Navig
 	private void initCommandManager() {
 		PaintroidApplication.commandManager = new CommandManagerImplementation();
 
-		//((CommandManagerImplementation) PaintroidApplication.commandManager)
-		//		.setRefreshLayerDialogListener(LayersDialog.getInstance());
+		((CommandManagerImplementation) PaintroidApplication.commandManager)
+				.setRefreshLayerDialogListener(LayerListener.getInstance());
 
 		((CommandManagerImplementation) PaintroidApplication.commandManager)
 				.setUpdateTopBarListener(mTopBar);
